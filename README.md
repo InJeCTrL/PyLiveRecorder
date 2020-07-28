@@ -4,6 +4,8 @@
 
 An easy template to help you build a Live monitor which will loop check the live room status.
 
+Although use websocket to establish the live room is an efficient method, it is hard to find universal parts among many live platforms, and some platforms don't support even websocket, so I decided to use loop check method to monitor.
+
 ## Folder Structure
 
 ```
