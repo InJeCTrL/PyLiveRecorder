@@ -2,11 +2,13 @@ import requests
 import threading
 import time
 
+__version__ = "1.0"
+
 class Monitor:
     '''
     Monitor the live room, and record while onair
     '''
-    def __init__(self, StreamPicker, gap = 10, NoticeWares = []):
+    def __init__(self, StreamPicker, gap = 30, NoticeWares = []):
         '''
         initialize Monitor
         StreamPicker:     function to fetch stream url
