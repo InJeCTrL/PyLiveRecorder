@@ -39,9 +39,8 @@ class Monitor:
                     for chunk in response.iter_content(chunk_size = 819200):
                         if chunk:
                             fout.write(chunk)
-                        with self.__m_ws:
-                            if self.__wannastop:
-                                break
+                        if self.__wannastop.isSet():
+                            break
         except KeyboardInterrupt:
             exit()
         except:
