@@ -19,10 +19,12 @@ class Monitor:
         self.__gap = gap
         self.__StreamPicker = StreamPicker
         self.__NoticeWares = NoticeWares
-        # mutex of monitor status
-        self.__m_r = threading.Lock()
+        # mutex of wannastop flag
+        self.__m_ws = threading.Lock()
         # whether to stop monitor
         self.__wannastop = threading.Event()
+        # mutex of monitor status
+        self.__m_r = threading.Lock()
         # status of monitor
         self.__isRunning = False
 
@@ -39,8 +41,9 @@ class Monitor:
                     for chunk in response.iter_content(chunk_size = 819200):
                         if chunk:
                             fout.write(chunk)
-                        if self.__wannastop.isSet():
-                            break
+                        with self.__m_ws:
+                            if self.__wannastop.isSet():
+                                break
         except KeyboardInterrupt:
             exit()
         except:
@@ -50,7 +53,10 @@ class Monitor:
         '''
         loop monitor the performer
         '''
-        while not self.__wannastop.isSet():
+        while True:
+            with self.__m_ws:
+                if self.__wannastop.isSet():
+                    break
             try:
                 self.__OnAir, self.__RoomId, self.__checktime, self.__roomurl, self.__filename, self.__nickname, self.__liveurl = self.__StreamPicker.getStreamURL()
             except Exception as e:
@@ -90,9 +96,11 @@ class Monitor:
         '''
         terminate monitor
         '''
-        self.__wannastop.set()
+        with self.__m_ws:
+            self.__wannastop.set()
         self.__th_monitor.join()
-        self.__wannastop.clear()
+        with self.__m_ws:
+            self.__wannastop.clear()
         with self.__m_r:
             if self.__isRunning:
                 self.__isRunning = False
