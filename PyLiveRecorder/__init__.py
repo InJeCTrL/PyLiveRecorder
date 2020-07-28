@@ -17,12 +17,10 @@ class Monitor:
         self.__gap = gap
         self.__StreamPicker = StreamPicker
         self.__NoticeWares = NoticeWares
-        # mutex of wannastop
-        self.__m_ws = threading.Lock()
         # mutex of monitor status
         self.__m_r = threading.Lock()
         # whether to stop monitor
-        self.__wannastop = False
+        self.__wannastop = threading.Event()
         # status of monitor
         self.__isRunning = False
 
@@ -51,11 +49,7 @@ class Monitor:
         '''
         loop monitor the performer
         '''
-        while True:
-            with self.__m_ws:
-                if self.__wannastop:
-                    self.__wannastop = False
-                    break
+        while not self.__wannastop.isSet():
             try:
                 self.__OnAir, self.__RoomId, self.__checktime, self.__roomurl, self.__filename, self.__nickname, self.__liveurl = self.__StreamPicker.getStreamURL()
             except Exception as e:
@@ -79,7 +73,7 @@ class Monitor:
                         print("Error: NoticeWare(OffAir notice) - %s" % (nw.getName()))
             else:
                 print("\rIDLE: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime)), end = '', flush = True)
-                time.sleep(self.__gap)
+                self.__wannastop.wait(self.__gap)
 
     def start(self):
         '''
@@ -95,10 +89,9 @@ class Monitor:
         '''
         terminate monitor
         '''
-        with self.__m_ws:
-            if not self.__wannastop:
-                self.__wannastop = True
+        self.__wannastop.set()
         self.__th_monitor.join()
+        self.__wannastop.clear()
         with self.__m_r:
             if self.__isRunning:
                 self.__isRunning = False
