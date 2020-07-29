@@ -11,6 +11,7 @@ class StreamPicker:
         initialize HuYa streampicker with RoomId
         RoomId:     HuYa-Live room Id
         '''
+        self.__name = "HuYa"
         self.__RoomId = RoomId
         self.__header_HY = {
             'Host': 'www.huya.com',
@@ -22,6 +23,12 @@ class StreamPicker:
             'Cache-Control': 'no-cache'
             }
         self.__verify()
+
+    def getName(self):
+        '''
+        return name of this
+        '''
+        return self.__name
 
     def __verify(self):
         '''

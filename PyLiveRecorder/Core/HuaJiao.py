@@ -9,6 +9,7 @@ class StreamPicker:
         initialize HuaJiao streampicker with UserId
         UserId:     HuaJiao-Live user Id
         '''
+        self.__name = "HuaJiao"
         self.__UserId = UserId
         self.__header_HuaJiao = {
             #'Host': 'webh.huajiao.com',
@@ -19,6 +20,12 @@ class StreamPicker:
             'Cache-Control': 'no-cache'
             }
         self.__verify()
+
+    def getName(self):
+        '''
+        return name of this
+        '''
+        return self.__name
 
     def __verify(self):
         '''

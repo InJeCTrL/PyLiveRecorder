@@ -8,12 +8,19 @@ class StreamPicker:
         initialize Bilibili streampicker with RoomId
         RoomId:     Bilibili-Live room Id
         '''
+        self.__name = "Bilibili"
         self.__RoomId = RoomId
         self.__header_Bilibili = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0',
             'Cache-Control': 'no-cache'
             }
         self.__verify()
+
+    def getName(self):
+        '''
+        return name of this
+        '''
+        return self.__name
 
     def __verify(self):
         '''

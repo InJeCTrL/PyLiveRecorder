@@ -9,6 +9,7 @@ class StreamPicker:
         initialize YiZhiBo streampicker with MemberId
         MemberId:     YiZhiBo-Live member Id
         '''
+        self.__name = "YiZhiBo"
         self.__MemberId = MemberId
         self.__header_YiZhiBo = {
             'Host': 'm.yizhibo.com',
@@ -18,6 +19,12 @@ class StreamPicker:
             'Cache-Control': 'no-cache'
             }
         self.__verify()
+
+    def getName(self):
+        '''
+        return name of this
+        '''
+        return self.__name
 
     def __verify(self):
         '''
