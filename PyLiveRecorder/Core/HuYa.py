@@ -51,11 +51,15 @@ class StreamPicker:
                 continue
         page = bs4.BeautifulSoup(roompage, 'html.parser')
         streamTag = page.select("body script")[6].string
-        begin_pt = streamTag.find('"stream": ')
-        end_pt = streamTag.find('window.TT_LIVE_TIMING = {};')
-        streamInfo_str = streamTag[begin_pt : end_pt]
-        streamInfo_str = streamInfo_str.replace('\n', '').replace(' ', '').replace('"stream":', '')[:-3]
         checktime = time.localtime()
+        TT_ROOM_DATA_str = streamTag[streamTag.find("{\"type\""):]
+        TT_ROOM_DATA_str = TT_ROOM_DATA_str[:TT_ROOM_DATA_str.find("};") + 1]
+        TT_ROOM_DATA = json.loads(TT_ROOM_DATA_str)
+        if TT_ROOM_DATA['isOff']:
+            return [False, self.__RoomId, checktime, None, None, None, None]
+        streamInfo_str = streamTag[streamTag.find('"stream": '):]
+        streamInfo_str = streamInfo_str[:streamInfo_str.find("};") - 2]
+        streamInfo_str = streamInfo_str.replace('\n', '').replace(' ', '').replace('"stream":', '')
         if streamInfo_str == 'null':
             return [False, self.__RoomId, checktime, None, None, None, None]
         else:
@@ -67,4 +71,3 @@ class StreamPicker:
                     "https://www.huya.com/" + self.__RoomId, 
                     time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".flv", 
                     nickname, url]
-           
