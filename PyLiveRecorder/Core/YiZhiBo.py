@@ -39,7 +39,7 @@ class StreamPicker:
     def getStreamURL(self):
         '''
         try to check live status
-        OnAir return: [True, roomid, checktime, roomurl, fullname of output file, nickname, stream(flv) url]
+        OnAir return: [True, roomid, checktime, roomurl, fullname of output file, nickname, continuous stream url]
         Not OnAir return: [False, roomid, checktime, None, None, None, None]
         '''
         while True:
