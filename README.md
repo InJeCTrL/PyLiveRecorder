@@ -2,9 +2,15 @@
 
 > Live stream monitor module
 
+## Introduction
+
 An easy template to help you build a Live monitor which will loop check the live room status.
 
-Although use websocket to establish the live room is an efficient method, it is hard to find universal parts among many live platforms, and some platforms don't support even websocket, so I decided to use loop check method to monitor.
+Why not support websocket?
+> Although using websocket to establish the live room is an efficient method, it is hard to find universal parts among many live platforms, and some platforms don't even support websocket, so I decided to use loop check method to monitor. If you know how to use websocket to monitor a specific live platform, I think the best way is to develop your dedicate tool.
+
+Why not support HLS (*.m3u8)?
+> It means the program will loop check the remote *.m3u8 file while live is on air to keep downloading the live stream, I think it's not so efficient. What's more, HLS cut the whole live stream into many *.ts files, combining these file into a single file toughly(copy /b ...) may cause other problems(timestamp err...), and using ffmpeg to remix media stream will add external dependencies.
 
 ## Folder Structure
 
@@ -40,7 +46,7 @@ For example, we can use built-in StreamPickers and Noticewares to build a Live m
 
 ```python
 from PyLiveRecorder import Monitor
-from PyLiveRecorder.Core.Bilibili import StreamPicker as sp
+from PyLiveRecorder.Core.Bilibili import StreamPicker
 from PyLiveRecorder.NoticeWare.Bilibili import Notice
 
 m = Monitor(StreamPicker("roomId here"), 
