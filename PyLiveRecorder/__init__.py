@@ -32,6 +32,7 @@ class Monitor:
         '''
         download live stream to file
         '''
+        # TODO flv split download
         try:
             with requests.get(self.__liveurl, timeout = 10, stream = True, 
                               headers = {
@@ -57,12 +58,19 @@ class Monitor:
             with self.__m_ws:
                 if self.__wannastop.isSet():
                     break
-            try:
-                self.__OnAir, self.__RoomId, self.__checktime, self.__roomurl, self.__filename, self.__nickname, self.__liveurl = self.__StreamPicker.getStreamURL()
-            except Exception as e:
-                print("Fatal Error: StreamPicker")
-                print(str(e))
-                exit()
+            # try at most 3 times
+            for try_time in range(3):
+                try:
+                    self.__OnAir, self.__RoomId, self.__checktime, self.__roomurl, self.__filename, self.__nickname, self.__liveurl = self.__StreamPicker.getStreamURL()
+                    break
+                except Exception as e:
+                    print("Fatal Error: StreamPicker(try time: %d)" % (try_time + 1))
+                    print(str(e))
+                    if try_time == 2:
+                        print("Monitor has been exited!(try exceeds)")
+                        with self.__m_r:
+                            self.__isRunning = False
+                            exit()
             if self.__OnAir:
                 print("\rOnAir: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime)), end = '', flush = True)
                 # OnAir notice
@@ -104,3 +112,21 @@ class Monitor:
         with self.__m_r:
             if self.__isRunning:
                 self.__isRunning = False
+
+    def getInfo(self):
+        '''
+        get infomation about monitor, streampicker and noticeware
+        '''
+        return {
+            "StreamPicker": self.__StreamPicker.getName(),
+            "NoticeWare": [NoticeWare.getName() for NoticeWare in self.__NoticeWares],
+            "Monitor Status": {
+                "Running": self.__isRunning,
+                "OnAir": self.__OnAir if "_Monitor__OnAir" in locals() else False,
+                "Lastest checktime": time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime) if "_Monitor__checktime" in locals() else None,
+                "RoomId": self.__RoomId if "_Monitor__RoomId" in locals() else None,
+                "RoomURL": self.__roomurl if "_Monitor__roomurl" in locals() else None,
+                "NickName": self.__nickname if "_Monitor__nickname" in locals() else None, 
+                "LiveURL": self.__liveurl if "_Monitor__liveurl" in locals() else None
+                }
+            }
