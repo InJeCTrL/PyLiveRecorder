@@ -12,6 +12,10 @@ Why not support websocket?
 Why not support HLS (*.m3u8)?
 > It means the program will loop check the remote *.m3u8 file while live is on air to keep downloading the live stream, I think it's not so efficient. What's more, HLS cut the whole live stream into many *.ts files, combining these file into a single file toughly(copy /b ...) may cause other problems(timestamp err...), and using ffmpeg to remix media stream will add external dependencies.
 
+## Features
+
+Monitor processes flv stream by frames from v1.3, this method will probably reduce live video damages like video garbled due to a new video configuration followed by the old one.
+
 ## Folder Structure
 
 ```
@@ -49,17 +53,26 @@ from PyLiveRecorder import Monitor
 from PyLiveRecorder.Core.Bilibili import StreamPicker
 from PyLiveRecorder.NoticeWare.Bilibili import Notice
 
-m = Monitor(StreamPicker("roomId here"), 
+sp = StreamPicker("roomId here")
+m = Monitor(sp, 
             gap = 60,  # loop check the live room per minute
             NoticeWares = [Notice("Bilibili session here")])
 m.start()
 while True:
-    if input() == "stop":
+    cmd = input()
+    # stop the monitor and exit
+    if cmd == "stop":
         m.stop()
         break
+    # check information about monitor (include streampicker and noticewares used)
+    elif cmd == "minfo":
+        print(m.getInfo())
+    # output name of streampicker
+    elif cmd == "spname":
+        print(sp.getName())
 ```
 
-Also we can develop our own StreamPicker like this: (3 functions below are necessary)
+Also we can develop our own StreamPicker like this: (4 functions below are necessary)
 
 ```python
 class StreamPicker:
@@ -68,10 +81,17 @@ class StreamPicker:
         initialize xxx streampicker with RoomId
         RoomId:     xxx-Live room Id
         '''
+        self.__name = "xxx"
         self.__RoomId = RoomId
         pass
         self.__verify()
-
+        
+    def getName(self):
+        '''
+        return name of this
+        '''
+        return self.__name
+    
     def __verify(self):
         '''
         verify if Id or this module is valid
@@ -85,7 +105,7 @@ class StreamPicker:
     def getStreamURL(self):
         '''
         try to check live status
-        OnAir return: [True, roomid, checktime, roomurl, fullname of output file, nickname, stream(flv) url]
+        OnAir return: [True, roomid, checktime, roomurl, fullname of output file, nickname, continuous stream url]
         Not OnAir return: [False, roomid, checktime, None, None, None, None]
         '''
         pass
