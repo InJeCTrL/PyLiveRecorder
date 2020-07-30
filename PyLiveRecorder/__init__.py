@@ -2,7 +2,7 @@ import requests
 import threading
 import time
 
-__version__ = "1.2"
+__version__ = "1.3"
 
 class Monitor:
     '''
@@ -28,27 +28,87 @@ class Monitor:
         # status of monitor
         self.__isRunning = False
 
+    def __rawread(self, source, n_bytes):
+        '''
+        read n bytes from source
+        '''
+        read_data = bytearray()
+        while n_bytes > 0:
+            chunk = source.read(n_bytes)
+            sz_chunk = len(chunk)
+            if sz_chunk == 0:
+                raise Exception()
+            read_data += chunk
+            n_bytes -= sz_chunk
+
+        return read_data
+
     def __downloadLive(self):
         '''
         download live stream to file
         '''
-        # TODO flv split download
         try:
             with requests.get(self.__liveurl, timeout = 10, stream = True, 
                               headers = {
                                   'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0'
                                   }) as response:
                 with open(self.__filename, "wb") as fout:
-                    for chunk in response.iter_content(chunk_size = 819200):
-                        if chunk:
-                            fout.write(chunk)
-                        with self.__m_ws:
-                            if self.__wannastop.isSet():
+                    # download flv stream by frames
+                    if self.__liveurl.endswith(".flv") or self.__liveurl.find(".flv?") != -1:
+                        source = response.raw
+                        sz = 0
+                        # read header
+                        tag = self.__rawread(source, 9)
+                        sz_tag = self.__rawread(source, 4)
+                        if sz == int.from_bytes(sz_tag, 'big'):
+                            fout.write(tag)
+                            fout.write(sz_tag)
+                            fout.flush()
+                            # read tags and tag pointers
+                            FirstVideoFrame = True
+                            while True:
+                                tag_without_data = self.__rawread(source, 11)
+                                # metadata(script tag) not the first tag
+                                if tag_without_data[0] == 0x12 and sz != 0:
+                                    print("split by metadata")
+                                    break
+                                sz_tagdata = int.from_bytes(tag_without_data[1:4], 'big')
+                                tag_data = self.__rawread(source, sz_tagdata)
+                                # AVC packet not the first video tag
+                                if tag_without_data[0] == 0x9 and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
+                                    if not FirstVideoFrame:
+                                        print("split by AVC sequence header")
+                                        break
+                                    else:
+                                        FirstVideoFrame = False
+                                sz_tag = self.__rawread(source, 4)
+                                sz = 11 + sz_tagdata
+                                if sz == int.from_bytes(sz_tag, 'big'):
+                                    fout.write(tag_without_data)
+                                    fout.write(tag_data)
+                                    fout.write(sz_tag)
+                                    fout.flush()
+                                # tag size not match
+                                else:
+                                    break
+                                with self.__m_ws:
+                                    if self.__wannastop.isSet():
+                                        break
+                    # download other continuous stream directly
+                    else:
+                        for chunk in response.iter_content(chunk_size = 819200):
+                            if chunk:
+                                fout.write(chunk)
+                                fout.flush()
+                            else:
                                 break
+                            with self.__m_ws:
+                                if self.__wannastop.isSet():
+                                    break
         except KeyboardInterrupt:
             exit()
         except:
-            print("\nDownload Error...Retry")
+            print("Download Error...Retry")
         
     def __loopMonitor(self):
         '''
@@ -72,7 +132,7 @@ class Monitor:
                             self.__isRunning = False
                             exit()
             if self.__OnAir:
-                print("\rOnAir: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime)), end = '', flush = True)
+                print("\rOnAir: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime)))
                 # OnAir notice
                 for nw in self.__NoticeWares:
                     try:
