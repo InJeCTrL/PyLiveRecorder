@@ -27,6 +27,8 @@ PyLiveRecorder
 |       HuaJiao.py
 |       HuYa.py
 |       YiZhiBo.py
+|       LongZhu.py
+|       YY.py
 |       __init__.py
 |
 \---NoticeWare
