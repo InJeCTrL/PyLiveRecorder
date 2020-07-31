@@ -2,7 +2,7 @@ import requests
 import threading
 import time
 
-__version__ = "1.3"
+__version__ = "1.4"
 
 class Monitor:
     '''
