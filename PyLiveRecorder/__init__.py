@@ -1,6 +1,7 @@
 import requests
 import threading
 import time
+import subprocess
 
 __version__ = "1.4"
 
@@ -48,63 +49,78 @@ class Monitor:
         download live stream to file
         '''
         try:
-            with requests.get(self.__liveurl, timeout = 10, stream = True, 
-                              headers = {
-                                  'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0'
-                                  }) as response:
-                with open(self.__filename, "wb") as fout:
-                    # download flv stream by frames
-                    if self.__liveurl.endswith(".flv") or self.__liveurl.find(".flv?") != -1:
-                        source = response.raw
-                        sz = 0
-                        # read header
-                        tag = self.__rawread(source, 9)
-                        sz_tag = self.__rawread(source, 4)
-                        if sz == int.from_bytes(sz_tag, 'big'):
-                            fout.write(tag)
-                            fout.write(sz_tag)
-                            fout.flush()
-                            # read tags and tag pointers
-                            FirstVideoFrame = True
-                            while True:
-                                tag_without_data = self.__rawread(source, 11)
-                                # metadata(script tag) not the first tag
-                                if tag_without_data[0] == 0x12 and sz != 0:
-                                    print("split by metadata")
-                                    break
-                                sz_tagdata = int.from_bytes(tag_without_data[1:4], 'big')
-                                tag_data = self.__rawread(source, sz_tagdata)
-                                # AVC packet not the first video tag
-                                if tag_without_data[0] == 0x9 and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
-                                    if not FirstVideoFrame:
-                                        print("split by AVC sequence header")
+            # download HLS video depending on external FFmpeg
+            if self.__liveurl.endswith(".m3u8") or self.__liveurl.find(".m3u8?") != -1:
+                proc = subprocess.Popen("\"ffmpeg.exe\" -loglevel quiet -headers \"User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0\" " + 
+                                    "-i \"%s\" %s" % (self.__liveurl, self.__filename), 
+                                    shell = False, stdout = subprocess.DEVNULL, 
+                                    stderr = subprocess.DEVNULL, stdin = subprocess.PIPE)
+                while True:
+                    if proc.poll() != None:
+                        break
+                    self.__wannastop.wait(10)
+                    with self.__m_ws:
+                        if self.__wannastop.isSet():
+                            proc.communicate('q'.encode("GBK"))
+                            break
+            else:
+                with requests.get(self.__liveurl, timeout = 10, stream = True, 
+                                  headers = {
+                                      'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0'
+                                      }) as response:
+                    with open(self.__filename, "wb") as fout:
+                        # download flv stream by frames
+                        if self.__liveurl.endswith(".flv") or self.__liveurl.find(".flv?") != -1:
+                            source = response.raw
+                            sz = 0
+                            # read header
+                            tag = self.__rawread(source, 9)
+                            sz_tag = self.__rawread(source, 4)
+                            if sz == int.from_bytes(sz_tag, 'big'):
+                                fout.write(tag)
+                                fout.write(sz_tag)
+                                fout.flush()
+                                # read tags and tag pointers
+                                FirstVideoFrame = True
+                                while True:
+                                    tag_without_data = self.__rawread(source, 11)
+                                    # metadata(script tag) not the first tag
+                                    if tag_without_data[0] == 0x12 and sz != 0:
+                                        print("split by metadata")
                                         break
+                                    sz_tagdata = int.from_bytes(tag_without_data[1:4], 'big')
+                                    tag_data = self.__rawread(source, sz_tagdata)
+                                    # AVC packet not the first video tag
+                                    if tag_without_data[0] == 0x9 and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
+                                        if not FirstVideoFrame:
+                                            print("split by AVC sequence header")
+                                            break
+                                        else:
+                                            FirstVideoFrame = False
+                                    sz_tag = self.__rawread(source, 4)
+                                    sz = 11 + sz_tagdata
+                                    if sz == int.from_bytes(sz_tag, 'big'):
+                                        fout.write(tag_without_data)
+                                        fout.write(tag_data)
+                                        fout.write(sz_tag)
+                                        fout.flush()
+                                    # tag size not match
                                     else:
-                                        FirstVideoFrame = False
-                                sz_tag = self.__rawread(source, 4)
-                                sz = 11 + sz_tagdata
-                                if sz == int.from_bytes(sz_tag, 'big'):
-                                    fout.write(tag_without_data)
-                                    fout.write(tag_data)
-                                    fout.write(sz_tag)
+                                        break
+                                    with self.__m_ws:
+                                        if self.__wannastop.isSet():
+                                            break
+                        # download other continuous stream directly
+                        else:
+                            for chunk in response.iter_content(chunk_size = 819200):
+                                if chunk:
+                                    fout.write(chunk)
                                     fout.flush()
-                                # tag size not match
                                 else:
                                     break
                                 with self.__m_ws:
                                     if self.__wannastop.isSet():
                                         break
-                    # download other continuous stream directly
-                    else:
-                        for chunk in response.iter_content(chunk_size = 819200):
-                            if chunk:
-                                fout.write(chunk)
-                                fout.flush()
-                            else:
-                                break
-                            with self.__m_ws:
-                                if self.__wannastop.isSet():
-                                    break
         except KeyboardInterrupt:
             exit()
         except:
