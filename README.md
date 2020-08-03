@@ -13,7 +13,7 @@ Why not support websocket?
 
 Monitor processes flv stream by frames from v1.3, this method will probably reduce live video damages like video garbled due to a new video configuration followed by the old one.
 
-Monitor downloads hls(*.m3u8) by using external FFmpeg from v1.4, please make sure FFmpeg binary file named `ffmpeg. *` with your python script under the same folder.
+Monitor downloads hls(*.m3u8) by using external FFmpeg from v1.5, please make sure FFmpeg binary file named `ffmpeg. *` with your python script under the same folder.
 
 ## Folder Structure
 
