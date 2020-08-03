@@ -3,7 +3,7 @@ import threading
 import time
 import subprocess
 
-__version__ = "1.4"
+__version__ = "1.5"
 
 class Monitor:
     '''
