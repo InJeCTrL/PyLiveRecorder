@@ -2,8 +2,9 @@ import requests
 import threading
 import time
 import subprocess
+import os
 
-__version__ = "1.5"
+__version__ = "1.6"
 
 class Monitor:
     '''
@@ -125,6 +126,8 @@ class Monitor:
             exit()
         except:
             print("Download Error...Retry")
+        if os.path.exists(self.__filename) and os.path.isfile(self.__filename) and os.path.getsize(self.__filename) == 0:
+            os.remove(self.__filename)
         
     def __loopMonitor(self):
         '''
