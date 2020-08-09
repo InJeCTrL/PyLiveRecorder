@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6"
+__version__ = "1.6.1"
 
 class Monitor:
     '''
@@ -53,7 +53,7 @@ class Monitor:
             # download HLS video depending on external FFmpeg
             if self.__liveurl.endswith(".m3u8") or self.__liveurl.find(".m3u8?") != -1:
                 proc = subprocess.Popen("\"ffmpeg\" -loglevel quiet -headers \"User-Agent: Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0\" " + 
-                                    "-i \"%s\" %s" % (self.__liveurl, self.__filename), 
+                                    "-i \"%s\" -c copy -bsf:a aac_adtstoasc %s" % (self.__liveurl, self.__filename), 
                                     shell = False, stdout = subprocess.DEVNULL, 
                                     stderr = subprocess.DEVNULL, stdin = subprocess.PIPE)
                 while True:
