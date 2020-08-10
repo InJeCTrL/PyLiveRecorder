@@ -83,6 +83,7 @@ class Monitor:
                                 fout.flush()
                                 # read tags and tag pointers
                                 FirstVideoFrame = True
+                                FirstAudioFrame = True
                                 while True:
                                     tag_without_data = self.__rawread(source, 11)
                                     # metadata(script tag) not the first tag
@@ -98,6 +99,13 @@ class Monitor:
                                             break
                                         else:
                                             FirstVideoFrame = False
+                                    # AAC config packet not the first audio tag
+                                    if tag_without_data[0] == 0x8 and (tag_data[0] & 0xf0) == 0xa and tag_data[1] == 0:
+                                        if not FirstAudioFrame:
+                                            print("split by AAC specific config")
+                                            break
+                                        else:
+                                            FirstAudioFrame = False
                                     sz_tag = self.__rawread(source, 4)
                                     sz = 11 + sz_tagdata
                                     if sz == int.from_bytes(sz_tag, 'big'):
