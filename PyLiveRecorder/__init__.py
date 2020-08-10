@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6.2"
+__version__ = "1.6.3"
 
 class Monitor:
     '''
@@ -92,16 +92,18 @@ class Monitor:
                                         break
                                     sz_tagdata = int.from_bytes(tag_without_data[1:4], 'big')
                                     tag_data = self.__rawread(source, sz_tagdata)
-                                    # AVC packet not the first video tag
-                                    if tag_without_data[0] == 0x9 and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
-                                        if not FirstVideoFrame:
+                                    # video tag
+                                    if tag_without_data[0] == 0x9:
+                                        # AVC sequence header not the first video frame
+                                        if not FirstVideoFrame and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
                                             print("split by AVC sequence header")
                                             break
                                         else:
                                             FirstVideoFrame = False
-                                    # AAC config packet not the first audio tag
-                                    if tag_without_data[0] == 0x8 and (tag_data[0] & 0xf0) == 0xa and tag_data[1] == 0:
-                                        if not FirstAudioFrame:
+                                    # audio tag
+                                    if tag_without_data[0] == 0x8:
+                                        # AAC config packet not the first audio frame
+                                        if not FirstAudioFrame and (tag_data[0] & 0xf0) >> 4 == 0xa and tag_data[1] == 0:
                                             print("split by AAC specific config")
                                             break
                                         else:
