@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6.3"
+__version__ = "1.6.4"
 
 class Monitor:
     '''
@@ -82,8 +82,9 @@ class Monitor:
                                 fout.write(sz_tag)
                                 fout.flush()
                                 # read tags and tag pointers
-                                FirstVideoFrame = True
-                                FirstAudioFrame = True
+                                AVCseqhRecved = False
+                                AACconfRecved = False
+                                MediaFrameRecved = False
                                 while True:
                                     tag_without_data = self.__rawread(source, 11)
                                     # metadata(script tag) not the first tag
@@ -92,22 +93,30 @@ class Monitor:
                                         break
                                     sz_tagdata = int.from_bytes(tag_without_data[1:4], 'big')
                                     tag_data = self.__rawread(source, sz_tagdata)
-                                    # video tag
-                                    if tag_without_data[0] == 0x9:
-                                        # AVC sequence header not the first video frame
-                                        if not FirstVideoFrame and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
+                                    # AVC sequence header
+                                    if tag_without_data[0] == 0x9 and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
+                                        # AVC sequence header not before all media frames or 
+                                        # meet second AVC sequence header
+                                        if AVCseqhRecved or MediaFrameRecved:
                                             print("split by AVC sequence header")
                                             break
                                         else:
-                                            FirstVideoFrame = False
-                                    # audio tag
-                                    if tag_without_data[0] == 0x8:
-                                        # AAC config packet not the first audio frame
-                                        if not FirstAudioFrame and (tag_data[0] & 0xf0) >> 4 == 0xa and tag_data[1] == 0:
+                                            AVCseqhRecved = True
+                                    # AAC config packet
+                                    elif tag_without_data[0] == 0x8 and (tag_data[0] & 0xf0) >> 4 == 0xa and tag_data[1] == 0:
+                                        # AAC config packet not before all media frames or
+                                        # meet second AAC config packet
+                                        if AACconfRecved or MediaFrameRecved:
                                             print("split by AAC specific config")
                                             break
                                         else:
-                                            FirstAudioFrame = False
+                                            AACconfRecved = True
+                                    # video tag but not AVC sequence header or
+                                    # audio tag but not AAC config packet
+                                    # (normal media frame)
+                                    elif (tag_without_data[0] == 0x9 and ((tag_data[0] & 0x0f) != 7 or tag_data[1] != 0)) or\
+                                        (tag_without_data[0] == 0x8 and ((tag_data[0] & 0xf0) >> 4 != 0xa or tag_data[1] != 0)):
+                                        MediaFrameRecved = True
                                     sz_tag = self.__rawread(source, 4)
                                     sz = 11 + sz_tagdata
                                     if sz == int.from_bytes(sz_tag, 'big'):
