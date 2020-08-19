@@ -57,6 +57,7 @@ from PyLiveRecorder.NoticeWare.Bilibili import Notice
 sp = StreamPicker("roomId here")
 m = Monitor(sp, 
             gap = 60,  # loop check the live room per minute
+            total_try = 5, # try StreamPicker for 5 times
             NoticeWares = [Notice("Bilibili session here")])
 m.start()
 while True:
@@ -102,15 +103,17 @@ Also we can develop our own StreamPicker like this: (4 functions below are neces
 
 ```python
 class StreamPicker:
-    def __init__(self, RoomId):
+    def __init__(self, RoomId, skip_verify = False):
         '''
         initialize xxx streampicker with RoomId
-        RoomId:     xxx-Live room Id
+        RoomId:     	xxx-Live room Id
+        skip_verify:    skip verification while initializing
         '''
         self.__name = "xxx"
         self.__RoomId = RoomId
         pass
-        self.__verify()
+    	if not skip_verify:
+        	self.__verify()
         
     def getName(self):
         '''
