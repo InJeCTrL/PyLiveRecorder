@@ -4,10 +4,11 @@ import json
 import time
 
 class StreamPicker:
-    def __init__(self, RoomId):
+    def __init__(self, RoomId, skip_verify = False):
         '''
         initialize HuYa streampicker with RoomId
-        RoomId:     HuYa-Live room Id
+        RoomId:         HuYa-Live room Id
+        skip_verify:    skip verification while initializing
         '''
         self.__name = "HuYa"
         self.__RoomId = RoomId
@@ -19,7 +20,8 @@ class StreamPicker:
             'Connection': 'keep-alive',
             'Cache-Control': 'no-cache'
             }
-        self.__verify()
+        if not skip_verify:
+            self.__verify()
 
     def getName(self):
         '''

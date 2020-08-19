@@ -4,10 +4,11 @@ import time
 import base64
 
 class StreamPicker:
-    def __init__(self, SId):
+    def __init__(self, SId, skip_verify = False):
         '''
         initialize YY streampicker with SId
-        SId:     YY-Live room Id(from live room url)
+        SId:            YY-Live room Id(from live room url)
+        skip_verify:    skip verification while initializing
         '''
         self.__name = "YY"
         self.__SId = SId
@@ -15,7 +16,8 @@ class StreamPicker:
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0',
             'Cache-Control': 'no-cache'
             }
-        self.__verify()
+        if not skip_verify:
+            self.__verify()
 
     def getName(self):
         '''

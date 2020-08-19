@@ -4,10 +4,11 @@ import json
 import time
 
 class StreamPicker:
-    def __init__(self, MemberId):
+    def __init__(self, MemberId, skip_verify = False):
         '''
         initialize YiZhiBo streampicker with MemberId
-        MemberId:     YiZhiBo-Live member Id
+        MemberId:       YiZhiBo-Live member Id
+        skip_verify:    skip verification while initializing
         '''
         self.__name = "YiZhiBo"
         self.__MemberId = MemberId
@@ -18,7 +19,8 @@ class StreamPicker:
             'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
             'Cache-Control': 'no-cache'
             }
-        self.__verify()
+        if not skip_verify:
+            self.__verify()
 
     def getName(self):
         '''
