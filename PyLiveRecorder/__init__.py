@@ -4,13 +4,13 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6.5"
+__version__ = "1.6.6"
 
 class Monitor:
     '''
     Monitor the live room, and record while onair
     '''
-    def __init__(self, StreamPicker, gap = 30, NoticeWares = []):
+    def __init__(self, StreamPicker, gap = 30, total_try = 3, NoticeWares = []):
         '''
         initialize Monitor
         StreamPicker:     function to fetch stream url
@@ -19,6 +19,8 @@ class Monitor:
         '''
         # gap of each check round(seconds)
         self.__gap = gap
+        # total try times of StreamPicker
+        self.__total_try = total_try
         self.__StreamPicker = StreamPicker
         self.__NoticeWares = NoticeWares
         # mutex of wannastop flag
@@ -153,23 +155,31 @@ class Monitor:
         loop monitor the performer
         '''
         while True:
+            # check to exit
             with self.__m_ws:
                 if self.__wannastop.isSet():
                     break
-            # try at most 3 times
-            for try_time in range(3):
+            # try StreamPicker at most {total_try} times
+            try_time = 0
+            while True:
                 try:
                     self.__OnAir, self.__RoomId, self.__checktime, self.__roomurl, self.__filename, self.__nickname, self.__liveurl = self.__StreamPicker.getStreamURL()
                     break
                 except Exception as e:
-                    print("Fatal Error: StreamPicker(try time: %d)" % (try_time + 1))
+                    try_time += 1
+                    print("Fatal Error: StreamPicker(try time: %d)" % (try_time))
                     print(str(e))
-                    self.__wannastop.wait(5)
-                    if try_time == 2:
+                    if try_time == self.__total_try:
                         print("Monitor has been exited!(try exceeds)")
                         with self.__m_r:
                             self.__isRunning = False
                             exit()
+                    # retry after 5 seconds
+                    else:
+                        self.__wannastop.wait(5)
+                        with self.__m_ws:
+                            if self.__wannastop.isSet():
+                                exit()
             if self.__OnAir:
                 print("\rOnAir: %s" % (time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime)))
                 # OnAir notice
