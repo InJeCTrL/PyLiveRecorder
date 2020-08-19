@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6.4"
+__version__ = "1.6.5"
 
 class Monitor:
     '''
@@ -164,6 +164,7 @@ class Monitor:
                 except Exception as e:
                     print("Fatal Error: StreamPicker(try time: %d)" % (try_time + 1))
                     print(str(e))
+                    self.__wannastop.wait(5)
                     if try_time == 2:
                         print("Monitor has been exited!(try exceeds)")
                         with self.__m_r:
