@@ -15,6 +15,8 @@ Monitor processes flv stream by frames from v1.3, this method will probably redu
 
 Monitor downloads hls(*.m3u8) by using external FFmpeg from v1.5, please make sure FFmpeg binary file named `ffmpeg. *` with your python script under the same folder.
 
+Monitor corrects timestamp in header of flv frames while downloading flv stream from v1.6.7.
+
 ## Folder Structure
 
 ```
