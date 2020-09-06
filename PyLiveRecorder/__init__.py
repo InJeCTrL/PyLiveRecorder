@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6.6"
+__version__ = "1.6.7"
 
 class Monitor:
     '''
@@ -87,6 +87,7 @@ class Monitor:
                                 AVCseqhRecved = False
                                 AACconfRecved = False
                                 MediaFrameRecved = False
+                                starttime = 0
                                 while True:
                                     tag_without_data = self.__rawread(source, 11)
                                     # metadata(script tag) not the first tag
@@ -104,6 +105,8 @@ class Monitor:
                                             break
                                         else:
                                             AVCseqhRecved = True
+                                            # set timestamp of AVC sequence header to 0
+                                            tag_without_data[4:8] = [0] * 4
                                     # AAC config packet
                                     elif tag_without_data[0] == 0x8 and (tag_data[0] & 0xf0) >> 4 == 0xa and tag_data[1] == 0:
                                         # AAC config packet not before all media frames or
@@ -113,12 +116,29 @@ class Monitor:
                                             break
                                         else:
                                             AACconfRecved = True
+                                            # set timestamp of AAC config packet to 0
+                                            tag_without_data[4:8] = [0] * 4
                                     # video tag but not AVC sequence header or
                                     # audio tag but not AAC config packet
                                     # (normal media frame)
                                     elif (tag_without_data[0] == 0x9 and ((tag_data[0] & 0x0f) != 7 or tag_data[1] != 0)) or\
                                         (tag_without_data[0] == 0x8 and ((tag_data[0] & 0xf0) >> 4 != 0xa or tag_data[1] != 0)):
-                                        MediaFrameRecved = True
+                                        # receive the first normal media frame then
+                                        # record the start time
+                                        if not MediaFrameRecved:
+                                            MediaFrameRecved = True
+                                            starttime = (tag_without_data[4] << 16) | (tag_without_data[5] << 8) | (tag_without_data[6])
+                                            starttime |= (tag_without_data[7] << 24)
+                                            tag_without_data[4:8] = [0] * 4
+                                        # real timestamp = timestamp recved - starttime
+                                        else:
+                                            recvtime = (tag_without_data[4] << 16) | (tag_without_data[5] << 8) | (tag_without_data[6])
+                                            recvtime |= (tag_without_data[7] << 24)
+                                            realtime = recvtime - starttime
+                                            tag_without_data[4] = (realtime & 0x00ff0000) >> 16
+                                            tag_without_data[5] = (realtime & 0x0000ff00) >> 8
+                                            tag_without_data[6] = (realtime & 0x000000ff)
+                                            tag_without_data[7] = (realtime & 0xff000000) >> 24
                                     sz_tag = self.__rawread(source, 4)
                                     sz = 11 + sz_tagdata
                                     if sz == int.from_bytes(sz_tag, 'big'):
