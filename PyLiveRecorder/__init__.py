@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.6.7"
+__version__ = "1.6.8"
 
 class Monitor:
     '''
@@ -251,11 +251,11 @@ class Monitor:
             "NoticeWare": [NoticeWare.getName() for NoticeWare in self.__NoticeWares],
             "Monitor Status": {
                 "Running": self.__isRunning,
-                "OnAir": self.__OnAir if "_Monitor__OnAir" in locals() else False,
-                "Lastest checktime": time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime) if "_Monitor__checktime" in locals() else None,
-                "RoomId": self.__RoomId if "_Monitor__RoomId" in locals() else None,
-                "RoomURL": self.__roomurl if "_Monitor__roomurl" in locals() else None,
-                "NickName": self.__nickname if "_Monitor__nickname" in locals() else None, 
-                "LiveURL": self.__liveurl if "_Monitor__liveurl" in locals() else None
+                "OnAir": self.__OnAir if "_Monitor__OnAir" in vars(self) else False,
+                "Lastest checktime": time.strftime("%Y-%m-%d %H:%M:%S", self.__checktime) if "_Monitor__checktime" in vars(self) else None,
+                "RoomId": self.__RoomId if "_Monitor__RoomId" in vars(self) else None,
+                "RoomURL": self.__roomurl if "_Monitor__roomurl" in vars(self) else None,
+                "NickName": self.__nickname if "_Monitor__nickname" in vars(self) else None,
+                "LiveURL": self.__liveurl if "_Monitor__liveurl" in vars(self) else None
                 }
             }
