@@ -29,6 +29,7 @@ PyLiveRecorder
 |       HuYa.py
 |       YiZhiBo.py
 |       LongZhu.py
+|       DouYu.py
 |       YY.py
 |       __init__.py
 |
