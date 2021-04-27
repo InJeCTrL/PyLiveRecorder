@@ -15,8 +15,17 @@ class StreamPicker:
         self.__name = "DouYu"
         self.__RoomId = RoomId
         self.__header_DouYu = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; rv:76.0) Gecko/20100101 Firefox/76.0',
-            'Cache-Control': 'no-cache'
+            'Host': 'www.douyu.com',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
+            'Accept-Encoding': 'gzip, deflate, br',
+            'Origin': 'https://www.douyu.com',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0',
+            'Cache-Control': 'no-cache',
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Pragma': 'no-cache',
+            'TE': 'Trailers',
+            'Connection': 'keep-alive'
             }
         if not skip_verify:
             self.__verify()
@@ -91,10 +100,10 @@ class StreamPicker:
         js = execjs.compile(func_sign)
         params = js.call('sign', self.__RoomId, did, tt)
 
-        params += '&cdn=ws-h5&rate=0'
+        params += '&cdn=tct-h5&rate=0'
         while True:
             try:
-                response = requests.get("https://www.douyu.com/lapi/live/getH5Play/%s" % self.__RoomId,
+                response = requests.post("https://www.douyu.com/lapi/live/getH5Play/%s" % self.__RoomId,
                                         params = params, headers = self.__header_DouYu, timeout = 10)
                 PlayAPIContent = response.text
                 response.close()
