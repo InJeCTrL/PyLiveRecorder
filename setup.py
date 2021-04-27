@@ -11,6 +11,7 @@ setup(
     url='https://github.com/InJeCTrL/PyLiveRecorder/',
     install_requires=[
         "requests",
-        "bs4"
+        "bs4",
+        "PyExecJS",
         ]
     )
