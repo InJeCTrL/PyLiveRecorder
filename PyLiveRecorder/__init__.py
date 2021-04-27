@@ -86,7 +86,8 @@ class Monitor:
                                 # read tags and tag pointers
                                 AVCseqhRecved = False
                                 AACconfRecved = False
-                                MediaFrameRecved = False
+                                MediaFrameRecvedFirst = False
+                                MediaFrameRecvedSecond = False
                                 starttime = 0
                                 while True:
                                     tag_without_data = self.__rawread(source, 11)
@@ -98,9 +99,9 @@ class Monitor:
                                     tag_data = self.__rawread(source, sz_tagdata)
                                     # AVC sequence header
                                     if tag_without_data[0] == 0x9 and (tag_data[0] & 0x0f) == 7 and tag_data[1] == 0:
-                                        # AVC sequence header not before all media frames or 
+                                        # AVC sequence header after second media frame or
                                         # meet second AVC sequence header
-                                        if AVCseqhRecved or MediaFrameRecved:
+                                        if AVCseqhRecved or MediaFrameRecvedSecond:
                                             print("split by AVC sequence header")
                                             break
                                         else:
@@ -111,7 +112,7 @@ class Monitor:
                                     elif tag_without_data[0] == 0x8 and (tag_data[0] & 0xf0) >> 4 == 0xa and tag_data[1] == 0:
                                         # AAC config packet not before all media frames or
                                         # meet second AAC config packet
-                                        if AACconfRecved or MediaFrameRecved:
+                                        if AACconfRecved or MediaFrameRecvedSecond:
                                             print("split by AAC specific config")
                                             break
                                         else:
@@ -123,10 +124,12 @@ class Monitor:
                                     # (normal media frame)
                                     elif (tag_without_data[0] == 0x9 and ((tag_data[0] & 0x0f) != 7 or tag_data[1] != 0)) or\
                                         (tag_without_data[0] == 0x8 and ((tag_data[0] & 0xf0) >> 4 != 0xa or tag_data[1] != 0)):
+                                        if MediaFrameRecvedFirst:
+                                            MediaFrameRecvedSecond = True
                                         # receive the first normal media frame then
                                         # record the start time
-                                        if not MediaFrameRecved:
-                                            MediaFrameRecved = True
+                                        if not MediaFrameRecvedFirst:
+                                            MediaFrameRecvedFirst = True
                                             starttime = (tag_without_data[4] << 16) | (tag_without_data[5] << 8) | (tag_without_data[6])
                                             starttime |= (tag_without_data[7] << 24)
                                             tag_without_data[4:8] = [0] * 4
