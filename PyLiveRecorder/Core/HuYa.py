@@ -55,24 +55,22 @@ class StreamPicker:
             except:
                 continue
         page = bs4.BeautifulSoup(roompage, 'html.parser')
-        for scriptTag in page.find_all('script', attrs = {'data-fixed':"true"}):
+        pattern = "window.HNF_GLOBAL_INIT = "
+        for scriptTag in page.find_all('script'):
             content = scriptTag.string
-            if content and content.find("//全局js") != -1:
+            if content and pattern in content:
                 streamTag = scriptTag.string
+                streamTag = streamTag[streamTag.index(pattern) + len(pattern):]
                 break
-        pattern = "var ISLIVE ="
-        OnAir = streamTag[streamTag.find(pattern) + len(pattern):]
-        OnAir = OnAir[:OnAir.find(";")].strip()
+        roominfo = json.loads(streamTag)
+        OnAir = roominfo["roomInfo"]["eLiveStatus"] != 1
         checktime = time.localtime()
-        if OnAir != "true":
+        if not OnAir:
             return [False, self.__RoomId, checktime, None, None, None, None]
-        pattern = "var ANTHOR_NICK = '"
-        nickname = streamTag[streamTag.find(pattern) + len(pattern):]
-        nickname = nickname[:nickname.find("'")].strip()
-        pattern = "hasvedio: '"
-        url = streamTag[streamTag.find(pattern) + len(pattern):]
-        url = url[:url.find("'")].strip()
-        url = "https:" + url.replace("hls.huya.com", "flv.huya.com").replace(".m3u8", ".flv").replace("_2000", "")
+        tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
+        nickname = tLiveInfo["sNick"]
+        streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][0]
+        url = streaminfo["sFlvUrl"] + "/" + streaminfo["sStreamName"] + ".flv?" + streaminfo["sFlvAntiCode"]
         return [True, self.__RoomId, checktime, 
                 "https://www.huya.com/" + self.__RoomId, 
                 time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".flv", 
@@ -128,24 +126,22 @@ class StreamPicker_HLS:
             except:
                 continue
         page = bs4.BeautifulSoup(roompage, 'html.parser')
-        for scriptTag in page.find_all('script', attrs = {'data-fixed':"true"}):
+        pattern = "window.HNF_GLOBAL_INIT = "
+        for scriptTag in page.find_all('script'):
             content = scriptTag.string
-            if content and content.find("//全局js") != -1:
+            if content and pattern in content:
                 streamTag = scriptTag.string
+                streamTag = streamTag[streamTag.index(pattern) + len(pattern):]
                 break
-        pattern = "var ISLIVE ="
-        OnAir = streamTag[streamTag.find(pattern) + len(pattern):]
-        OnAir = OnAir[:OnAir.find(";")].strip()
+        roominfo = json.loads(streamTag)
+        OnAir = roominfo["roomInfo"]["eLiveStatus"] != 1
         checktime = time.localtime()
-        if OnAir != "true":
+        if not OnAir:
             return [False, self.__RoomId, checktime, None, None, None, None]
-        pattern = "var ANTHOR_NICK = '"
-        nickname = streamTag[streamTag.find(pattern) + len(pattern):]
-        nickname = nickname[:nickname.find("'")].strip()
-        pattern = "hasvedio: '"
-        url = streamTag[streamTag.find(pattern) + len(pattern):]
-        url = url[:url.find("'")].strip()
-        url = "https:" + url.replace("_2000", "")
+        tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
+        nickname = tLiveInfo["sNick"]
+        streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][0]
+        url = streaminfo["sHlsUrl"] + "/" + streaminfo["sStreamName"] + ".m3u8?" + streaminfo["sHlsAntiCode"]
         return [True, self.__RoomId, checktime, 
                 "https://www.huya.com/" + self.__RoomId, 
                 time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".mp4", 
