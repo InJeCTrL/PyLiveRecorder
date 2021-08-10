@@ -45,36 +45,41 @@ class StreamPicker:
         OnAir return: [True, roomid, checktime, roomurl, fullname of output file, nickname, continuous stream url]
         Not OnAir return: [False, roomid, checktime, None, None, None, None]
         '''
+        OnAir_checked = False
         while True:
-            try:
-                response = requests.get("https://m.huya.com/" + self.__RoomId, 
-                                        headers = self.__header_HY, timeout = 10)
-                roompage = response.text
-                response.close()
-                break
-            except:
+            while True:
+                try:
+                    response = requests.get("https://m.huya.com/" + self.__RoomId, 
+                                            headers = self.__header_HY, timeout = 10)
+                    roompage = response.text
+                    response.close()
+                    break
+                except:
+                    continue
+            page = bs4.BeautifulSoup(roompage, 'html.parser')
+            pattern = "window.HNF_GLOBAL_INIT = "
+            for scriptTag in page.find_all('script'):
+                content = scriptTag.string
+                if content and pattern in content:
+                    streamTag = scriptTag.string
+                    streamTag = streamTag[streamTag.index(pattern) + len(pattern):]
+                    break
+            roominfo = json.loads(streamTag)
+            OnAir = roominfo["roomInfo"]["eLiveStatus"] != 1
+            checktime = time.localtime()
+            if not OnAir:
+                return [False, self.__RoomId, checktime, None, None, None, None]
+            if not OnAir_checked:
+                OnAir_checked = True
                 continue
-        page = bs4.BeautifulSoup(roompage, 'html.parser')
-        pattern = "window.HNF_GLOBAL_INIT = "
-        for scriptTag in page.find_all('script'):
-            content = scriptTag.string
-            if content and pattern in content:
-                streamTag = scriptTag.string
-                streamTag = streamTag[streamTag.index(pattern) + len(pattern):]
-                break
-        roominfo = json.loads(streamTag)
-        OnAir = roominfo["roomInfo"]["eLiveStatus"] != 1
-        checktime = time.localtime()
-        if not OnAir:
-            return [False, self.__RoomId, checktime, None, None, None, None]
-        tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
-        nickname = tLiveInfo["sNick"]
-        streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][0]
-        url = streaminfo["sFlvUrl"] + "/" + streaminfo["sStreamName"] + ".flv?" + streaminfo["sFlvAntiCode"]
-        return [True, self.__RoomId, checktime, 
-                "https://www.huya.com/" + self.__RoomId, 
-                time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".flv", 
-                nickname, url]
+            tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
+            nickname = tLiveInfo["sNick"]
+            streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][0]
+            url = streaminfo["sFlvUrl"] + "/" + streaminfo["sStreamName"] + ".flv?" + streaminfo["sFlvAntiCode"]
+            return [True, self.__RoomId, checktime, 
+                    "https://www.huya.com/" + self.__RoomId, 
+                    time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".flv", 
+                    nickname, url]
 
 class StreamPicker_HLS:
     def __init__(self, RoomId):
