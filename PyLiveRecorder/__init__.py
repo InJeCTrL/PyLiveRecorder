@@ -4,7 +4,7 @@ import time
 import subprocess
 import os
 
-__version__ = "1.7.2"
+__version__ = "1.7.3"
 
 class Monitor:
     '''
