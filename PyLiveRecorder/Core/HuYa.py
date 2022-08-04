@@ -74,7 +74,15 @@ class StreamPicker:
                 continue
             tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
             nickname = tLiveInfo["sNick"]
-            streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][2]
+            streaminfos = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"]
+            idxStreamInfo = -1
+            for i in range(len(streaminfos)):
+                if streaminfos[i]["sCdnType"] == "TX":
+                    idxStreamInfo = i
+                    break
+            if idxStreamInfo == -1:
+                idxStreamInfo = len(streaminfos) - 1
+            streaminfo = streaminfos[idxStreamInfo]
             url = streaminfo["sFlvUrl"] + "/" + streaminfo["sStreamName"] + ".flv?" + streaminfo["sFlvAntiCode"]
             return [True, self.__RoomId, checktime, 
                     "https://www.huya.com/" + self.__RoomId, 
@@ -145,7 +153,15 @@ class StreamPicker_HLS:
             return [False, self.__RoomId, checktime, None, None, None, None]
         tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
         nickname = tLiveInfo["sNick"]
-        streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][2]
+        streaminfos = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"]
+        idxStreamInfo = -1
+        for i in range(len(streaminfos)):
+            if streaminfos[i]["sCdnType"] == "TX":
+                idxStreamInfo = i
+                break
+        if idxStreamInfo == -1:
+            idxStreamInfo = len(streaminfos) - 1
+        streaminfo = streaminfos[idxStreamInfo]
         url = streaminfo["sHlsUrl"] + "/" + streaminfo["sStreamName"] + ".m3u8?" + streaminfo["sHlsAntiCode"]
         return [True, self.__RoomId, checktime, 
                 "https://www.huya.com/" + self.__RoomId, 
