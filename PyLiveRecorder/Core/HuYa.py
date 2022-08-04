@@ -74,7 +74,7 @@ class StreamPicker:
                 continue
             tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
             nickname = tLiveInfo["sNick"]
-            streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][1]
+            streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][2]
             url = streaminfo["sFlvUrl"] + "/" + streaminfo["sStreamName"] + ".flv?" + streaminfo["sFlvAntiCode"]
             return [True, self.__RoomId, checktime, 
                     "https://www.huya.com/" + self.__RoomId, 
@@ -145,7 +145,7 @@ class StreamPicker_HLS:
             return [False, self.__RoomId, checktime, None, None, None, None]
         tLiveInfo = roominfo["roomInfo"]["tLiveInfo"]
         nickname = tLiveInfo["sNick"]
-        streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][1]
+        streaminfo = tLiveInfo["tLiveStreamInfo"]["vStreamInfo"]["value"][2]
         url = streaminfo["sHlsUrl"] + "/" + streaminfo["sStreamName"] + ".m3u8?" + streaminfo["sHlsAntiCode"]
         return [True, self.__RoomId, checktime, 
                 "https://www.huya.com/" + self.__RoomId, 
