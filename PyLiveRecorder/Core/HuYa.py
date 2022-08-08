@@ -84,6 +84,7 @@ class StreamPicker:
                 idxStreamInfo = len(streaminfos) - 1
             streaminfo = streaminfos[idxStreamInfo]
             url = streaminfo["sFlvUrl"] + "/" + streaminfo["sStreamName"] + ".flv?" + streaminfo["sFlvAntiCode"]
+            url = url[:url.index("&ctype=")]
             return [True, self.__RoomId, checktime, 
                     "https://www.huya.com/" + self.__RoomId, 
                     time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".flv", 
@@ -163,6 +164,7 @@ class StreamPicker_HLS:
             idxStreamInfo = len(streaminfos) - 1
         streaminfo = streaminfos[idxStreamInfo]
         url = streaminfo["sHlsUrl"] + "/" + streaminfo["sStreamName"] + ".m3u8?" + streaminfo["sHlsAntiCode"]
+        url = url[:url.index("&ctype=")]
         return [True, self.__RoomId, checktime, 
                 "https://www.huya.com/" + self.__RoomId, 
                 time.strftime("(%Y-%m-%d-%H%M%S)", checktime) + self.__RoomId + ".mp4", 
